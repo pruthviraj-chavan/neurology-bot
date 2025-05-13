@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Neurology Assistant</title>
+  <title>🧠 Neurology Assistant</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -148,27 +148,29 @@
 
     async function sendMessage() {
       const userInput = document.getElementById('userInput');
-      const message = userInput.value.trim();
+      const rawMessage = userInput.value.trim(); // Keep original for display
 
-      if (message) {
-        addMessage(message, true);
-        userInput.value = '';
+      if (!rawMessage) return;
 
-        try {
-          const response = await fetch('/ask', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ question: message })
-          });
+      const normalizedMessage = rawMessage.toLowerCase(); // Send lowercase to backend
 
-          const data = await response.json();
-          addMessage(data.response, false);
-        } catch (error) {
-          console.error(error);
-          addMessage('⚠️ Sorry, there was an error processing your request.', false);
-        }
+      addMessage(rawMessage, true); // Show original input
+      userInput.value = '';
+
+      try {
+        const response = await fetch('/ask', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ question: normalizedMessage }) // send lowercase version
+        });
+
+        const data = await response.json();
+        addMessage(data.response, false);
+      } catch (error) {
+        console.error(error);
+        addMessage('⚠️ Sorry, there was an error processing your request.', false);
       }
     }
 
