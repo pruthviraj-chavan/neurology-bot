@@ -217,7 +217,7 @@
       userInput.value = '';
 
       try {
-        const response = await fetch('/api/ask', {
+        const response = await fetch('/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: message })
@@ -278,6 +278,9 @@
         recognition.onresult = function(event) {
           const transcript = event.results[0][0].transcript;
           document.getElementById('userInput').value = transcript;
+          setTimeout(() => {
+            sendMessage(); // Auto send after voice input
+          }, 500);
         };
 
         recognition.onerror = function(event) {
