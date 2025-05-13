@@ -1,117 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neurology Assistant</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .chat-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .chat-box {
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .input-container {
-            display: flex;
-            gap: 10px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .user-message {
-            background-color: #e3f2fd;
-            margin-left: 20%;
-        }
-        .bot-message {
-            background-color: #f5f5f5;
-            margin-right: 20%;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neurology Assistant</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .chat-container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .chat-box {
+      height: 450px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background-color: #fafafa;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      padding: 12px 16px;
+      margin: 10px 0;
+      border-radius: 8px;
+      max-width: 80%;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      background-color: #dcf8c6;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .bot-message {
+      background-color: #e0e0e0;
+      align-self: flex-start;
+      margin-right: auto;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .controls button {
+      min-width: 120px;
+    }
+  </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h1>Neurology Assistant</h1>
-        <div class="chat-box" id="chatBox"></div>
-        <div class="input-container">
-            <input type="text" id="userInput" placeholder="Ask a neurology question..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Send</button>
-        </div>
+  <div class="chat-container">
+    <h1>🧠 Neurology Assistant</h1>
+
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="input-container">
+      <input type="text" id="userInput" placeholder="Ask a neurology question..." onkeypress="handleKeyPress(event)">
+      <button onclick="sendMessage()">Send</button>
     </div>
 
-    <script>
-        function addMessage(message, isUser) {
-            const chatBox = document.getElementById('chatBox');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-            messageDiv.textContent = message;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    <div class="controls">
+      <button onclick="exportChat()">📁 Export Chat</button>
+      <button onclick="clearChat()" style="background-color: #dc3545;">🗑️ Clear Chat</button>
+      <button onclick="loadLastChat()" style="background-color: #ffc107; color: black;">🔁 Load Last Chat</button>
+    </div>
+  </div>
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
+  <script>
+    const chatBox = document.getElementById('chatBox');
 
-        async function sendMessage() {
-            const userInput = document.getElementById('userInput');
-            const message = userInput.value.trim();
-            
-            if (message) {
-                addMessage(message, true);
-                userInput.value = '';
+    // Load previous chat from localStorage
+    window.onload = () => {
+      const savedChat = localStorage.getItem('neurologyChat');
+      if (savedChat) {
+        chatBox.innerHTML = savedChat;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    };
 
-                try {
-                    const response = await fetch('/ask', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ question: message })
-                    });
-                    
-                    const data = await response.json();
-                    addMessage(data.response, false);
-                } catch (error) {
-                    addMessage('Sorry, there was an error processing your request.', false);
-                }
-            }
+    function addMessage(message, isUser) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+      messageDiv.textContent = message;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Save to local storage
+      localStorage.setItem('neurologyChat', chatBox.innerHTML);
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const userInput = document.getElementById('userInput');
+      const message = userInput.value.trim();
+
+      if (message) {
+        addMessage(message, true);
+        userInput.value = '';
+
+        try {
+          const response = await fetch('/ask', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question: message })
+          });
+
+          const data = await response.json();
+          addMessage(data.response, false);
+        } catch (error) {
+          console.error(error);
+          addMessage('⚠️ Sorry, there was an error processing your request.', false);
         }
-    </script>
+      }
+    }
+
+    function exportChat() {
+      const chatText = Array.from(chatBox.children)
+        .map(el => el.textContent).join('\n\n');
+
+      const blob = new Blob([chatText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'neurology_chat.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearChat() {
+      chatBox.innerHTML = '';
+      localStorage.removeItem('neurologyChat');
+    }
+
+    function loadLastChat() {
+      const savedChat = localStorage.getItem('neurologyChat');
+      if (savedChat) {
+        chatBox.innerHTML = savedChat;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } else {
+        alert("No chat history found.");
+      }
+    }
+  </script>
 </body>
-</html> 
+</html>
